@@ -5,21 +5,21 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
 public class updateUserRequestDTO {
-//    @NotEmpty
-//    @Size(min=8, max=20)
-//    private String username;
-//
-//    @NotEmpty
-//    @Email
-//    private String email;
-//
-//    @NotEmpty
-//    @Email
-//    private String updatedEmail;
-//
-//    @NotEmpty
-//    @Size(min=8, max=20)
-//    private String password;
+    @NotEmpty
+    @Size(min=8, max=20)
+    private String username;
+
+    @NotEmpty
+    @Email
+    private String email;
+
+    @NotEmpty
+    @Email
+    private String updatedEmail;
+
+    @NotEmpty
+    @Size(min=8, max=20)
+    private String password;
 
     public String getUsername() {
         return username;
