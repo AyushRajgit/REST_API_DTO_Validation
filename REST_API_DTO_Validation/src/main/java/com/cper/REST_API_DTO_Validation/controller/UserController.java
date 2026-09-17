@@ -24,63 +24,46 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/create")
+    @PostMapping
     private ResponseEntity<createUserResponseDTO> create(@Valid @RequestBody createUserRequestDTO userRequestDTO) {
         User newUser = mapToEntity_CreateRequestDTO(userRequestDTO);
-        Optional<User> createdUser = userService.createUser(newUser);
+        User createdUser = userService.createUser(newUser);
 
-        if (!createdUser.isPresent()) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-
-        createUserResponseDTO createdUserRes = mapToDTO_CreateResponseDTO(createdUser.get());
+        createUserResponseDTO createdUserRes = mapToDTO_CreateResponseDTO(createdUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUserRes);
     }
 
-    @GetMapping("/get")
-    private ResponseEntity<createUserResponseDTO> get(@RequestParam String email) {
-        Optional<User> user = userService.getUserbyEmail(email);
-        if (!user.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+    @GetMapping("/{email}")
+    private ResponseEntity<createUserResponseDTO> get(@PathVariable String email) {
+        User user = userService.getUserbyEmail(email);
 
-        createUserResponseDTO existingUserRes = mapToDTO_CreateResponseDTO(user.get());
+        createUserResponseDTO existingUserRes = mapToDTO_CreateResponseDTO(user);
         return ResponseEntity.status(HttpStatus.OK).body(existingUserRes);
     }
 
-    @GetMapping("/getAll")
+    @GetMapping
     private ResponseEntity<List<createUserResponseDTO>> getAll() {
-        Optional<List<User>> users = userService.getAllUsers();
-        if (!users.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+        List<User> users = userService.getAllUsers();
 
-        Optional<List<createUserResponseDTO>> allUsers = mapToDTOMultipleUsers(users.get());
-        return ResponseEntity.status(HttpStatus.OK).body(allUsers.get());
+        List<createUserResponseDTO> allUsers = mapToDTOMultipleUsers(users);
+        return ResponseEntity.status(HttpStatus.OK).body(allUsers);
     }
 
-    @PutMapping("/update")
+    @PutMapping
     private ResponseEntity<updateUserResponseDTO> update(@Valid @RequestBody updateUserRequestDTO userRequestDTO) {
         User user = mapToEntity_UpdateRequestDTO(userRequestDTO);
-        Optional<User> updatedUser = userService.updateUser(user, userRequestDTO.getEmail());
+        User updatedUser = userService.updateUser(user, userRequestDTO.getEmail());
 
-        if (!updatedUser.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-
-        updateUserResponseDTO updatedUserDTO = mapToDTO_UpdateResponseDTO(updatedUser.get());
+        updateUserResponseDTO updatedUserDTO = mapToDTO_UpdateResponseDTO(updatedUser);
         return ResponseEntity.status(HttpStatus.OK).body(updatedUserDTO);
     }
 
-    @DeleteMapping("/delete")
-    private ResponseEntity<deleteResponseDTO> delete(@RequestParam String email) {
-        Optional<User> user = userService.deleteUser(email);
-        if (!user.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+    @DeleteMapping("/{email}")
+    private ResponseEntity<deleteResponseDTO> delete(@PathVariable String email) {
+        User user = userService.deleteUser(email);
 
-        deleteResponseDTO deleteResDTO = mapToDTO_DeleteResponseDTO(user.get());
-        return ResponseEntity.status(HttpStatus.OK).body(deleteResDTO);
+        deleteResponseDTO deleteResDTO = mapToDTO_DeleteResponseDTO(user);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
     private User mapToEntity_CreateRequestDTO(createUserRequestDTO createUserRequestDTO) {
@@ -130,12 +113,12 @@ public class UserController {
         return deleteResDTO;
     }
 
-    private Optional<List<createUserResponseDTO>>  mapToDTOMultipleUsers(List<User> users) {
+    private List<createUserResponseDTO>  mapToDTOMultipleUsers(List<User> users) {
         List<createUserResponseDTO> createUserResponseDTOList = new ArrayList<>();
         for (User user : users) {
             createUserResponseDTO createUserResponseDTO = mapToDTO_CreateResponseDTO(user);
             createUserResponseDTOList.add(createUserResponseDTO);
         }
-        return  Optional.of(createUserResponseDTOList);
+        return  createUserResponseDTOList;
     }
 }

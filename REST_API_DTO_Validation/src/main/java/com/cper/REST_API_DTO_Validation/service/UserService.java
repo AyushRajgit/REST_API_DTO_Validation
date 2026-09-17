@@ -1,6 +1,10 @@
 package com.cper.REST_API_DTO_Validation.service;
 
 import com.cper.REST_API_DTO_Validation.entity.User;
+import com.cper.REST_API_DTO_Validation.exceptions.DuplicateEmailException;
+import com.cper.REST_API_DTO_Validation.exceptions.UnableToCreateUserException;
+import com.cper.REST_API_DTO_Validation.exceptions.UnableToUpdateUserException;
+import com.cper.REST_API_DTO_Validation.exceptions.UserNotFoundException;
 import com.cper.REST_API_DTO_Validation.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,41 +23,64 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public Optional<User> createUser(User newUser) {
-        User isSaved =  userRepository.save(newUser);
-        if (isSaved == null) return Optional.empty();
-        return Optional.of(isSaved);
+    public User createUser(User newUser) {
+        if (emailExists(newUser.getEmail())) {
+            throw new DuplicateEmailException("User with email : " + newUser.getEmail() + " already exists");
+        }
+
+        User savedUser =  userRepository.save(newUser);
+        if (savedUser == null) {
+            throw new UnableToCreateUserException("Unable to create user");
+        }
+        return savedUser;
     }
 
-    public Optional<User> getUserbyEmail(String email) {
+    public User getUserbyEmail(String email) {
         User existingUser = userRepository.findByEmail(email);
-        if (existingUser == null) return Optional.empty();
-        return Optional.of(existingUser);
+        if (existingUser == null) {
+            throw new UserNotFoundException("Unable to find user with email : " + email);
+        }
+        return existingUser;
     }
 
-    public Optional<List<User>> getAllUsers() {
+    public List<User> getAllUsers() {
         List<User> users = userRepository.findAll();
-        if (users.isEmpty()) return Optional.empty();
-        return Optional.of(users);
+        return users;
     }
 
-    public Optional<User> deleteUser(String email) {
+    public User deleteUser(String email) {
         User user = userRepository.findByEmail(email);
-        if (user == null) return Optional.empty();
+        if (user == null) {
+            throw new UserNotFoundException("Unable to delete user with email : " + email);
+        }
         userRepository.delete(user);
-        return Optional.of(user);
+        return user;
     }
 
-    public Optional<User> updateUser(User user, String OldEmail) {
+    public User updateUser(User user, String OldEmail) {
         User existingUser = userRepository.findByEmail(OldEmail);
-        if (existingUser == null) return Optional.empty();
+        if (existingUser == null) {
+            throw new UserNotFoundException("User not found with email : " + OldEmail);
+        }
+
+        if (emailExists(user.getEmail())) {
+            throw new DuplicateEmailException("User with email : " + user.getEmail() + "already exists");
+        }
 
         if (user.getUsername() != null) existingUser.setUsername(user.getUsername());
         if (user.getPassword() != null) existingUser.setPassword(user.getPassword());
         if (user.getEmail() != null) existingUser.setEmail(user.getEmail());
 
         existingUser.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(existingUser);
-        return Optional.of(existingUser);
+        User saved = userRepository.save(existingUser);
+
+        if (saved == null) {
+            throw new UnableToUpdateUserException("Unable to update user with email : " + OldEmail);
+        }
+        return existingUser;
+    }
+
+    private boolean  emailExists(String email) {
+        return userRepository.findByEmail(email) != null;
     }
 }
