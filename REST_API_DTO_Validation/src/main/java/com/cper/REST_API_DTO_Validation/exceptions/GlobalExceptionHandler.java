@@ -1,14 +1,18 @@
 package com.cper.REST_API_DTO_Validation.exceptions;
 
 import com.cper.REST_API_DTO_Validation.dto.ExceptionDTO;
+import com.cper.REST_API_DTO_Validation.dto.ValidationExceptionDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -29,6 +33,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(exceptionDTO);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ValidationExceptionDTO> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        Map<String,String> listErrorMessage = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach((error)->listErrorMessage.put(error.getField(), error.getDefaultMessage()));
+
+        ValidationExceptionDTO validationExceptionDTO = new ValidationExceptionDTO(
+          LocalDateTime.now(),
+          HttpStatus.BAD_REQUEST.value(),
+          "Bad field value",
+          listErrorMessage,
+          request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(validationExceptionDTO);
     }
 
     @ExceptionHandler(DuplicateEmailException.class)
